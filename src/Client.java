@@ -38,20 +38,42 @@ public class Client {
         return t.getIsConnected();
     }
 
-    public static void main(String [] args){
-        Client client = new Client();
-        System.out.println(client.connect());
+    public String getName(){
+        return t.getUsername();
+    }
+
+    public Boolean isGuest(){
+        return t.isGuest();
+    }
+
+    public void createRoom(String rn){
+        t.createRoom(rn);
+    }
+
+    public void joinRoom(String rn){
+        t.joinRoom(rn);
+    }
+
+    public void exitRoom(String rn){
+        t.exitRoom(rn);
+    }
+
+    public void guess(int num){
+        t.guess(num);
     }
 }
 
 class ClientThread extends Thread{
     Boolean isConnected = false;
     Boolean isLoggedIn = false;
+    Boolean isGuest = false;
     Socket socket;
     BufferedReader br;
     PrintWriter pw;
     String username;
     String password;
+    String currentLobby;
+    String currentRoom;
     
     ClientThread(){
     }
@@ -73,11 +95,11 @@ class ClientThread extends Thread{
 
     public void guest(String us){
         username = us;
+        isGuest = true;
         pw.println("Guest!"+username);
         try
         {
             sleep(500);
-            isLoggedIn = true;
         }
         catch(InterruptedException ex)
         {
@@ -89,18 +111,43 @@ class ClientThread extends Thread{
         username = us;
         password = pd;
         pw.println("TryRegister!"+username+"!"+password);
-        // intentional delay to get login result
-        pw.println("TryLogin!"+username+"!"+password);
         try
         {
-            sleep(500);
+            sleep(200);
         }
         catch(InterruptedException ex)
         {
             currentThread().interrupt();
         }
-        //TEMP
-        isLoggedIn = true;
+        // intentional delay to get login result
+        pw.println("TryLogin!"+username+"!"+password);
+        
+        try
+        {
+            sleep(300);
+        }
+        catch(InterruptedException ex)
+        {
+            currentThread().interrupt();
+        }
+        // //TEMP
+        // isLoggedIn = true;
+    }
+
+    public void createRoom(String rn){
+        pw.println("Create!"+rn);
+    }
+
+    public void joinRoom(String rn){
+        pw.println("join!"+rn);
+    }
+
+    public void exitRoom(String rn){
+        pw.println("Exit!"+rn);
+    }
+
+    public void guess(int num){
+        pw.println("Guess!"+Integer.toString(num));
     }
 
     public Boolean getIsConnected(){
@@ -111,8 +158,26 @@ class ClientThread extends Thread{
         return isLoggedIn;
     }
 
+    public String getUsername(){
+        return username;
+    }
+
+    public Boolean isGuest(){
+        return isGuest;
+    }
+
     private Boolean isForMe(String s){
         return s.contains(username+"!");
+    }
+
+    String extract(String data){
+        String[] arr = data.split("!");
+        return arr[1];
+    }
+
+    String extractPassword(String data){
+        String[] arr = data.split("!");
+        return arr[2];
     }
 
     public void run(){
@@ -137,12 +202,31 @@ class ClientThread extends Thread{
                 if (isConnected == false && line.contains("Connected!")){
                     isConnected = true;
                 }
-                if (isLoggedIn == false && isForMe(line)){
-                    if (line.contains("Registered!")){
+                if (isLoggedIn == false){
+                    if (line.contains("GoodRegister!")){
                         isLoggedIn = true;
+                        isGuest = false;
                     }
-                    if (line.contains("LoggedIn!")){
+                    if (line.contains("GoodLogin!")){
                         isLoggedIn = true;
+                        isGuest = false;
+                    }
+                    if (line.contains("GoodGuest!")){
+                        isLoggedIn = true;
+                        isGuest = true;
+                    }
+                }
+                if (isLoggedIn){
+                    if (line.contains("GoodJoin!")){
+                        String roomName = extract(line);
+                        // TODO
+                    }
+                    else if (line.contains("GoodExit!")){
+                        // TODO
+                    }
+                    else if (line.contains("Someone!")){
+                        // means that someone guessed
+                        // TODO
                     }
                 }
             } catch (SocketException se){

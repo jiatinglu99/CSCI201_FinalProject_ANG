@@ -72,10 +72,14 @@ class ServerThread extends Thread{
     public Boolean exitRoom(String rn){
         AbstractMap.SimpleEntry<Integer,List<ServerThread>> room = roomList.get(rn);
         if (room == null) return false;
+        roomMembers.remove(this);
+        if (roomMembers.size() == 0){
+            // TODO if the room is empty, delete room
+            
+        }
         roomName = null;
         roomGoal = null;
         roomMembers = null;
-        roomMembers.remove(this);
         return true;
     }
 
@@ -117,15 +121,34 @@ class ServerThread extends Thread{
                 }
                 else if (line.contains("Guest!")){
                     username = extract(line);
+                    pw.println("GoodGuest!"+username);
                 }
                 else if (line.contains("Create!")){
-
+                    String rn = extract(line);
+                    if (createRoom(rn)){
+                        pw.println("GoodJoin!"+rn);
+                    }
+                    else{
+                        pw.println("BadJoin!"+rn);
+                    }
                 }
                 else if (line.contains("Join!")){
-                    // TODO
+                    String rn = extract(line);
+                    if (joinRoom(rn)){
+                        pw.println("GoodJoin!"+rn);
+                    }
+                    else{
+                        pw.println("BadJoin!"+rn);
+                    }
                 }
                 else if (line.contains("Exit!")){
-                    // TODO
+                    String rn = extract(line);
+                    if (exitRoom(rn)){
+                        pw.println("GoodExit!"+rn);
+                    }
+                    else{
+                        pw.println("BadExit"+rn);
+                    }
                 }
                 else if (line.contains("Guess!")){
                     Integer guess;
@@ -133,17 +156,17 @@ class ServerThread extends Thread{
                         guess=Integer.parseInt(extract(line));
                     }
                     catch(NumberFormatException nfe){
-                        pw.println("");
+                        roomMembers.forEach(s->s.broadcast("Someone!"+extract(line)+"!INVALID!"+username));
                         continue;
                     }
                     if (guess>roomGoal){
-                        roomMembers.forEach(s->s.broadcast("Someone!"+Integer.toString(guess)+"!TOOBIG"));
+                        roomMembers.forEach(s->s.broadcast("Someone!"+Integer.toString(guess)+"!TOOBIG!"+username));
                     } 
                     else if (guess<roomGoal){
-                        roomMembers.forEach(s->s.broadcast("Someone!"+Integer.toString(guess)+"!TOOSMALL"));
+                        roomMembers.forEach(s->s.broadcast("Someone!"+Integer.toString(guess)+"!TOOSMALL!"+username));
                     } else{
-                        roomMembers.forEach(s->s.broadcast("Someone!"+Integer.toString(guess)+"!EQUAL"));
-                        roomMembers.forEach(s->s.exitRoom(roomName));
+                        // TODO Add Score
+                        roomMembers.forEach(s->s.broadcast("Someone!"+Integer.toString(guess)+"!EQUAL!"+username));
                     }
                 }
             } catch (SocketException se){

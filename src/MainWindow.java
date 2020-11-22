@@ -81,7 +81,7 @@ public class MainWindow extends TWindow {
         addLabel("  \\_____| \\__,_| \\___||___/|___/|_||_| |_| \\__, |      ", startP, ++row);
         addLabel("                                            __/ |      ", startP, ++row);
         addLabel("                                           |___/       ", startP, ++row);
-        row -= 1;
+        row -= 0;
 
         TWidget first = addButton("Login", 28, row,
             new TAction() {
@@ -106,7 +106,7 @@ public class MainWindow extends TWindow {
                                 // result from login
                                 if (client.isLoggedin()){
                                     // lobby page
-                                    new LobbyWindow(getApplication());
+                                    new LobbyWindow(getApplication(), client);
                                 }
                             }
                         }
@@ -140,7 +140,7 @@ public class MainWindow extends TWindow {
                                 // result from login
                                 if (client.isLoggedin()){
                                     // lobby page
-                                    new LobbyWindow(getApplication());
+                                    new LobbyWindow(getApplication(), client);
                                 }
                             }
                         }
@@ -160,7 +160,7 @@ public class MainWindow extends TWindow {
                         // result from login
                         if (client.isLoggedin()){
                             // lobby page
-                            new LobbyWindow(getApplication());
+                            new LobbyWindow(getApplication(), client);
                         }
                     }
                 }
@@ -179,9 +179,9 @@ public class MainWindow extends TWindow {
         );
 
         client.connect();
-        row = 26;
+        row = 27;
         progressBar1 = addProgressBar(26, row, 12, 0);
-        row+=2;
+        row+=1;
         timerLabel = addLabel(i18n.getString("timerLabel"), 25, row);
         timer1 = getApplication().addTimer(80, true,
             new TAction() {
@@ -190,7 +190,7 @@ public class MainWindow extends TWindow {
                         timer1I+=1;
                     }
                     if (client.isConnected()){
-                        timer1I+=3;
+                        timer1I+=5;
                         if (timer1I > 100) timer1I = 100;
                     }
                     if (timer1I == 100){
