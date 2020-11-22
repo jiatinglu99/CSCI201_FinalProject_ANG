@@ -30,11 +30,11 @@ public class Database {
          */
         try {
             //url
-            String jdbcUrl = "jdbc:mysql://localhost:3306/fpdatabase";
+            String jdbcUrl = "jdbc:mysql://localhost:3308/fpdatabase";
             //user
             String db_user = "root";
             //password
-            String db_password = "root";//"dd001127";
+            String db_password = "dd001127";//"dd001127";
             Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection(jdbcUrl, db_user, db_password);
         } catch (ClassNotFoundException c){
@@ -43,7 +43,7 @@ public class Database {
             s.printStackTrace();
         }
     }
-    
+
     public Boolean register(String us, String pd){
         String sql1 = "insert into register(username,password,score) values(?,?,?);";
         PreparedStatement preStmt=null;
@@ -84,12 +84,14 @@ public class Database {
         }
         return false;
     }
-
-    public Boolean addScore(String us){
-        String sql3="update register SET score=score+1 where username=?";
+    ////////////////////////////添加分数//////////////////////////////////
+    public Boolean addScore(String us, int score){
+        String sql3="update register SET score=score+? where username=?";
+        int scoreToAdd=score;
         try{
             PreparedStatement sta = connection.prepareStatement(sql3);
-            sta.setString(1, us);
+            sta.setInt(1, scoreToAdd);
+            sta.setString(2, us);
             int j=-1;
             j=sta.executeUpdate();
             if(j>=1){
@@ -100,5 +102,23 @@ public class Database {
             e.printStackTrace();
         }
         return false;
+    }
+////////////////////////////查询分数//////////////////////////////////
+    public String lookUpScore(String us){
+        String sql4="select score from register where username=?";
+        try{
+            PreparedStatement sta = connection.prepareStatement(sql4);
+            String username=us;
+            sta.setString(1, username);
+            ResultSet rs = sta.executeQuery();
+            while (rs.next()) {
+                System.out.println("The score for user "+us+" is "+ rs.getString("score"));
+                return rs.getString("score");
+            }
+        }
+        catch(SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
