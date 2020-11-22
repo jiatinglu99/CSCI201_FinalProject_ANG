@@ -8,40 +8,79 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.*;
 
 public class Server {
 
     public static void main(String[] args) {
-        Integer goal = ThreadLocalRandom.current().nextInt(1000);
-        System.out.println("The passcode is "+goal);
         try {
             ServerSocket ss = new ServerSocket(5677);
-            List<ServerThread> threads=new ArrayList<>();
-            ServerThread.threads=threads;
-            ServerThread.goal=goal;
+            Map<String, AbstractMap.SimpleEntry<Integer,List<ServerThread>>> roomList=new HashMap<String, AbstractMap.SimpleEntry<Integer,List<ServerThread>>>();
+            List<ServerThread> threads = new ArrayList<ServerThread>();
+            ServerThread.roomList = roomList;
+            ServerThread.threads = threads;
+            
             while (true) {
                 Socket s=ss.accept();
                 System.out.println("Connection from "+s.getInetAddress());
                 threads.add(new ServerThread(s));
             }
-        } catch (IOException ignored){}
+        } catch (IOException ignored){
+            System.out.println(ignored.getMessage());
+        }
     }
-
 }
 
 class ServerThread extends Thread{
     PrintWriter pw;
     BufferedReader br;
+    static Map<String, AbstractMap.SimpleEntry<Integer,List<ServerThread>>> roomList;
     static List<ServerThread> threads;
-    static Integer goal;
+    String username;
+    String roomName;
+    Integer roomGoal;
+    List<ServerThread> roomMembers;
 
     ServerThread(Socket s) throws IOException {
         pw = new PrintWriter(s.getOutputStream(),true);
-        pw.println("The rule is simple:\n" +
-                "There is a random Integer as passcode, and you can enter an Integer to guess it.\n" +
-                "Whoever guesses right first wins, and you will be notified whether the guess is right.");
+        pw.println("Connected!");
         br = new BufferedReader(new InputStreamReader(s.getInputStream()));
         this.start();
+    }
+
+    public Boolean createRoom(String rn){
+        roomName = rn;
+        roomGoal = ThreadLocalRandom.current().nextInt(1000);
+        roomMembers = new ArrayList<ServerThread>();
+        roomMembers.add(this);
+        roomList.put(roomName, new AbstractMap.SimpleEntry<>(roomGoal, roomMembers));
+        return true;
+    }
+
+    public Boolean joinRoom(String rn){
+        AbstractMap.SimpleEntry<Integer,List<ServerThread>> room = roomList.get(rn);
+        if (room == null) return false;
+        roomName = rn;
+        roomGoal = room.getKey();
+        roomMembers = room.getValue();
+        roomMembers.add(this);
+        roomList.put(roomName, new AbstractMap.SimpleEntry<>(roomGoal, roomMembers));
+        return true;
+    }
+
+    public Boolean exitRoom(String rn){
+        AbstractMap.SimpleEntry<Integer,List<ServerThread>> room = roomList.get(rn);
+        if (room == null) return false;
+        roomName = null;
+        roomGoal = null;
+        roomMembers = null;
+        roomMembers.remove(this);
+        return true;
+    }
+
+    String extract(String data){
+        String[] arr = data.split("!");
+        return arr[1];
     }
 
     public void run(){
@@ -49,20 +88,43 @@ class ServerThread extends Thread{
             try {
                 String line=br.readLine();
                 System.out.println(line);
-                Integer guess;
-                try{guess=Integer.parseInt(line);}
-                catch(NumberFormatException nfe){
-                    pw.println("Please enter an Integer");
-                    continue;
+                if (line.contains("TryLogin!")){
+                    // TODO
                 }
-                if (guess>goal){
-                    threads.forEach(s->s.broadcast("Someone guessed: "+guess+"\nAnd it is greater than the passcode."));
-                } else if (guess<goal){
-                    threads.forEach(s->s.broadcast("Someone guessed: "+guess+"\nAnd it is less than the passcode."));
-                } else{
-                    threads.forEach(s->s.broadcast("Someone guessed: "+guess+"\nAnd it is correct!\nSomeone Wins!"));
-                    threads.forEach(Thread::interrupt);
-                    return;
+                else if (line.contains("TryRegister!")){
+                    // TODO
+                }
+                else if (line.contains("Create!")){
+                    // TODO
+                }
+                else if (line.contains("Guest!")){
+                    username = extract(line);
+                    // TODO
+                }
+                else if (line.contains("Join!")){
+                    // TODO
+                }
+                else if (line.contains("Exit!")){
+                    // TODO
+                }
+                else if (line.contains("Guess!")){
+                    Integer guess;
+                    try{
+                        guess=Integer.parseInt(extract(line));
+                    }
+                    catch(NumberFormatException nfe){
+                        pw.println("");
+                        continue;
+                    }
+                    if (guess>roomGoal){
+                        roomMembers.forEach(s->s.broadcast("Someone!"+Integer.toString(guess)+"!TOOBIG"));
+                    } 
+                    else if (guess<roomGoal){
+                        roomMembers.forEach(s->s.broadcast("Someone!"+Integer.toString(guess)+"!TOOSMALL"));
+                    } else{
+                        roomMembers.forEach(s->s.broadcast("Someone!"+Integer.toString(guess)+"!EQUAL"));
+                        roomMembers.forEach(s->s.exitRoom(roomName));
+                    }
                 }
             } catch (SocketException se){
                 break;

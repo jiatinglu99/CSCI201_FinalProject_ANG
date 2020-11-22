@@ -5,6 +5,7 @@ import java.sql.*;
  * @using IntelliJ IDEA
  */
 public class Database {
+    private static Connection connection;
     public static void main(String[] args) throws ClassNotFoundException, SQLException {
         /**
          * 1.注册（先查， 如果已存在 提示并重新要求注册 再增）
@@ -12,18 +13,20 @@ public class Database {
          * 3.分数改动（猜对了加一分， 并且还要可以查询特定用户名的分数） 已经在数据库设置为唯一索引
          */
         //url
-        String jdbcUrl = "jdbc:mysql://localhost:3308/fpdatabase";
+        String jdbcUrl = "jdbc:mysql://localhost:3306/fpdatabase";
         //user
-        String user = "root";
+        String db_user = "root";
         //password
-        String password = "dd001127";
+        String db_password = "root";//"dd001127";
         Class.forName("com.mysql.cj.jdbc.Driver");
-        //////////////////////////////////////注册////////////////////////////////////////////////////////////////////////////////////
-        Connection connection = DriverManager.getConnection(jdbcUrl, user, password);
+        connection = DriverManager.getConnection(jdbcUrl, db_user, db_password);
+    }
+    
+    public Boolean register(String us, String pd){
         String sql1 = "insert into register(username,password,score) values(?,?,?);";
         PreparedStatement preStmt=null;
-        String username="xiaomaogary";
-        String pwd="dd001127";
+        String username=us;
+        String pwd=pd;
         int score=0;
         try{
             preStmt= connection.prepareStatement(sql1);
@@ -33,45 +36,47 @@ public class Database {
             int i = -1;
             i = preStmt.executeUpdate();
             if(i>=1){
-                System.out.println("注册成功！");
+                return true;
             }
-            else{
-                System.out.println("注册失败！");
-            }
+            return false;
         }catch(SQLException e){
             e.printStackTrace();
         }
-        //////////////////////////////////////登录////////////////////////////////////////////////////////////////////////////////////
+        return false;
+    }
+
+    public Boolean login(String us, String pd){
         String sql2 = "select * from register where username=? and password=?;";
         try {
             PreparedStatement sta = connection.prepareStatement(sql2);
+            String username=us;
+            String pwd=pd;
             sta.setString(1, username);
-            sta.setString(2, password);
+            sta.setString(2, pwd);
             ResultSet rs = sta.executeQuery();
             if (rs.next()) {
-                System.out.println(rs.getString(3) + "登入成功");
-            } else {
-                System.out.println("账号或者密码输入不正确");
+                return true;
             }
         }catch(SQLException e){
             e.printStackTrace();
         }
-        //////////////////////////////////////加分////////////////////////////////////////////////////////////////////////////////////
+        return false;
+    }
+
+    public Boolean addScore(String us){
         String sql3="update register SET score=score+1 where username=?";
         try{
             PreparedStatement sta = connection.prepareStatement(sql3);
-            sta.setString(1, username);
+            sta.setString(1, us);
             int j=-1;
             j=sta.executeUpdate();
             if(j>=1){
-                System.out.println("加分成功！");
-            }
-            else{
-                System.out.println("加分失败！");
+                return true;
             }
         }
         catch(SQLException e) {
             e.printStackTrace();
         }
+        return false;
     }
 }
