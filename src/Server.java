@@ -40,6 +40,7 @@ class ServerThread extends Thread{
     String roomName;
     Integer roomGoal;
     List<ServerThread> roomMembers;
+    Database database;
 
     ServerThread(Socket s) throws IOException {
         pw = new PrintWriter(s.getOutputStream(),true);
@@ -89,21 +90,36 @@ class ServerThread extends Thread{
     }
 
     public void run(){
+        String password;
+
+        database = new Database();
         while(true){
             try {
                 String line=br.readLine();
                 System.out.println(line);
                 if (line.contains("TryLogin!")){
-                    // TODO
+                    username = extract(line);
+                    password = extractPassword(line);
+                    if(!database.login(username,password)){
+                        pw.println("BadLogin!");
+                    } else {
+                        pw.println("GoodLogin");
+                    }
                 }
                 else if (line.contains("TryRegister!")){
-                    // TODO
+                    username = extract(line);
+                    password = extractPassword(line);
+                    if(!database.register(username,password)){
+                        pw.println("BadRegister!");
+                    } else {
+                        pw.println("GoodRegister");
+                    }
                 }
                 else if (line.contains("Guest!")){
                     username = extract(line);
                 }
                 else if (line.contains("Create!")){
-                    // TODO
+
                 }
                 else if (line.contains("Join!")){
                     // TODO
