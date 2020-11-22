@@ -40,7 +40,7 @@ class ServerThread extends Thread{
 
 
     public ServerThread(Socket s, Room r) throws IOException {
-        goal = ThreadLocalRandom.current().nextInt(1000);
+        this.goal = r.goal;
         //System.out.println("The passcode is "+goal);
         pw = new PrintWriter(s.getOutputStream(),true);
         pw.println("The passcode is "+goal);
@@ -53,51 +53,54 @@ class ServerThread extends Thread{
     }
 
     public void run(){
-
-            try {
-                //semaphore.acquire();
-                //System.out.println("Acquire a permit");
-                //line = br.readLine();
-                //System.out.println(line);
-                //r.broadcast(line,this);
-                while(true){
-                    String line = br.readLine();
-                    System.out.println(line);
-                    Integer guess;
-                    try{guess=Integer.parseInt(line);}
-                    catch(NumberFormatException nfe){
-                        pw.println("Please enter an Integer");
-                        continue;
-                    }
-                    if (guess>goal){
-                        //threads.forEach(s->s.sendMessage("Someone guessed: "+guess+"\nAnd it is greater than the passcode."));
-                        r.broadcast("Someone guessed: "+guess+"\nAnd it is greater than the passcode.", this);
-                    } else if (guess<goal){
-                        //threads.forEach(s->s.sendMessage("Someone guessed: "+guess+"\nAnd it is less than the passcode."));
-                        r.broadcast("Someone guessed: "+guess+"\nAnd it is less than the passcode.", this);
-                    } else{
-                        //threads.forEach(s->s.sendMessage("Someone guessed: "+guess+"\nAnd it is correct!\nSomeone Wins!"));
-                        r.broadcast("Someone guessed: "+guess+"\nAnd it is correct!\nSomeone Wins!", this);
-                        //threads.forEach(Thread::interrupt);
-                        return;
-                    }//Sent text back to the clients
-
+        try {
+            //semaphore.acquire();
+            //System.out.println("Acquire a permit");
+            //line = br.readLine();
+            //System.out.println(line);
+            //r.broadcast(line,this);
+            while(true){
+                String line = br.readLine();
+                if(line == null) {
+                    r.goal = ThreadLocalRandom.current().nextInt(1000);
+                    break;
                 }
+                System.out.println(line);
+                Integer guess;
+                try{guess=Integer.parseInt(line);}
+                catch(NumberFormatException nfe){
+                    pw.println("Please enter an Integer");
+                    continue;
+                }
+                if (guess>goal){
+                    //threads.forEach(s->s.sendMessage("Someone guessed: "+guess+"\nAnd it is greater than the passcode."));
+                    r.broadcast(" guessed: "+guess+"\nAnd it is greater than the passcode.", this);
+                } else if (guess<goal){
+                    //threads.forEach(s->s.sendMessage("Someone guessed: "+guess+"\nAnd it is less than the passcode."));
+                    r.broadcast(" guessed: "+guess+"\nAnd it is less than the passcode.", this);
+                } else{
+                    //threads.forEach(s->s.sendMessage("Someone guessed: "+guess+"\nAnd it is correct!\nSomeone Wins!"));
+                    r.broadcast(" guessed: "+guess+"\nAnd it is correct!\nSomeone Wins!", this);
+                    //threads.forEach(Thread::interrupt);
+                    return;
+                }//Sent text back to the clients
+
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                //semaphore.release();
+                System.out.println("Release a permit");
+                pw.close();
+                br.close();
             }
             catch (IOException e) {
                 e.printStackTrace();
             }
-            finally {
-                try {
-                    //semaphore.release();
-                    System.out.println("Release a permit");
-                    pw.close();
-                    br.close();
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+        }
     }
     public void sendMessage(String message)
     {

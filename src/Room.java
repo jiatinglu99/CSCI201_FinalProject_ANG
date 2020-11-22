@@ -1,5 +1,7 @@
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.locks.Lock;
@@ -8,10 +10,12 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Room
 {
     private ArrayBlockingQueue<ServerThread> serverThreads;
+    //static Integer goal;
+    Integer goal;
 
     public Room(int port)
     {
-        Integer goal = ThreadLocalRandom.current().nextInt(1000);
+        goal = ThreadLocalRandom.current().nextInt(1000);
         System.out.println("The passcode is "+goal);
         try{
             // establish a port
@@ -37,15 +41,30 @@ public class Room
             System.out.println("Broadcasting... "+message);
             for(ServerThread threads : serverThreads) {
                 if (st != threads) {
-                    threads.sendMessage(message);
+                    threads.sendMessage("Someone"+message);
+                } else {
+                    threads.sendMessage("You"+message);
                 }
             }
         }
     }
 
+    //public static void main(String [] args){new Room(1234);}
     public static void main(String [] args)
     {
-        new Room(1234);
+        ArrayList<Integer> roomNum = new ArrayList<Integer> ();
+        roomNum.add(1234);
+        roomNum.add(2345);
+        roomNum.add(5678);
+        Scanner scan = new Scanner(System.in);
+        System.out.print("Enter any number: ");
+        Integer a = scan.nextInt();
+        while(a>=0)
+        {
+            int n = roomNum.get(a);
+            new Room(n);
+            a = scan.nextInt();
+        }
     }
 }
 

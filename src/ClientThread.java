@@ -4,12 +4,13 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 //public class Client {
 //
 //    public static void main(String[] args) {
-//        new ClientThread("localhost",1234);
+//        new ClientTwsehread("localhost",1234);
 ////        Scanner sc=new Scanner(System.in);
 ////        //String Addr=sc.nextLine();
 ////        //Socket s;
@@ -84,9 +85,32 @@ class ClientThread extends Thread{
         }
     }
 
-    public static void main(String[] args) {
+/*    public static void main(String[] args) {
         try {
             new ClientThread("localhost",1234);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+ */
+
+    public static void main(String[] args) {
+        ArrayList<Integer> myroomNum = new ArrayList<Integer> ();
+        try {
+            myroomNum.add(1234);
+            myroomNum.add(2345);
+            myroomNum.add(5678);
+            Scanner scan = new Scanner(System.in);
+            System.out.print("Enter any number: ");
+            Integer a = scan.nextInt();
+            while(a>=0)
+            {
+                int n = myroomNum.get(a);
+                new ClientThread("localhost",n);
+                a = scan.nextInt();
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
