@@ -83,6 +83,11 @@ class ServerThread extends Thread{
         return arr[1];
     }
 
+    String extractPassword(String data){
+        String[] arr = data.split("!");
+        return arr[2];
+    }
+
     public void run(){
         while(true){
             try {
@@ -94,11 +99,10 @@ class ServerThread extends Thread{
                 else if (line.contains("TryRegister!")){
                     // TODO
                 }
-                else if (line.contains("Create!")){
-                    // TODO
-                }
                 else if (line.contains("Guest!")){
                     username = extract(line);
+                }
+                else if (line.contains("Create!")){
                     // TODO
                 }
                 else if (line.contains("Join!")){

@@ -14,6 +14,10 @@ public class Client {
         t.login(username, password);
     }
 
+    public void guest(String username){
+        t.guest(username);
+    }
+
     public void register(String username, String password){
         t.register(username, password);
     }
@@ -60,6 +64,20 @@ class ClientThread extends Thread{
         try
         {
             sleep(500);
+        }
+        catch(InterruptedException ex)
+        {
+            currentThread().interrupt();
+        }
+    }
+
+    public void guest(String us){
+        username = us;
+        pw.println("Guest!"+username);
+        try
+        {
+            sleep(500);
+            isLoggedIn = true;
         }
         catch(InterruptedException ex)
         {

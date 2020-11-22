@@ -20,6 +20,7 @@ import static jexer.TKeypress.*;
 import jexer.demos.*;
 import jexer.TMessageBox;
 import jexer.TInputBox;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * This is the main "demo" application window.  It makes use of the TTimer,
@@ -80,7 +81,7 @@ public class MainWindow extends TWindow {
         addLabel("  \\_____| \\__,_| \\___||___/|___/|_||_| |_| \\__, |      ", startP, ++row);
         addLabel("                                            __/ |      ", startP, ++row);
         addLabel("                                           |___/       ", startP, ++row);
-        row += 1;
+        row -= 1;
 
         TWidget first = addButton("Login", 28, row,
             new TAction() {
@@ -142,6 +143,24 @@ public class MainWindow extends TWindow {
                                     new LobbyWindow(getApplication());
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        );
+
+        row += 2;
+        addButton("Guest", 28, row,
+            new TAction() {
+                public void DO() {
+                    if (client.isConnected()){
+                        // Generate random username
+                        username = "USER" + Integer.toString(ThreadLocalRandom.current().nextInt(10000));
+                        client.guest(username);
+                        // result from login
+                        if (client.isLoggedin()){
+                            // lobby page
+                            new LobbyWindow(getApplication());
                         }
                     }
                 }
