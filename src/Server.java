@@ -1,7 +1,4 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -15,7 +12,9 @@ public class Server {
 
     public static void main(String[] args) {
         try {
-            ss = new ServerSocket(5677);
+            Properties pps=new Properties();
+            pps.load(new FileInputStream("server.properties"));
+            ss = new ServerSocket(Integer.parseInt(pps.getProperty("serverPort")));
             Map<String, AbstractMap.SimpleEntry<Integer,List<ServerThread>>> roomList=new HashMap<String, AbstractMap.SimpleEntry<Integer,List<ServerThread>>>();
             List<ServerThread> threads = new ArrayList<ServerThread>();
             ServerThread.roomList = roomList;
@@ -70,7 +69,9 @@ class ServerThread extends Thread{
 
     public Boolean joinRoom(String rn){
         AbstractMap.SimpleEntry<Integer,List<ServerThread>> room = roomList.get(rn);
-        if (room == null) return false;
+        if (room == null) {
+            return false;
+        }
         roomName = rn;
         roomGoal = room.getKey();
         roomMembers = room.getValue();
@@ -84,7 +85,9 @@ class ServerThread extends Thread{
 
     public Boolean exitRoom(String rn){
         AbstractMap.SimpleEntry<Integer,List<ServerThread>> room = roomList.get(rn);
-        if (room == null) return false;
+        if (room == null) {
+            return false;
+        }
         roomMembers.remove(this);
         if (roomMembers.size() == 0){
             roomList.remove(rn);
@@ -117,6 +120,7 @@ class ServerThread extends Thread{
         pw.println(str.toString());
     }
 
+    @Override
     public void run(){
         String password;
 

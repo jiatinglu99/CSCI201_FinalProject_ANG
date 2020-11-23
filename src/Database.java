@@ -6,28 +6,8 @@ import java.sql.*;
  */
 public class Database {
     private static Connection connection;
-//    public static void main(String[] args) throws ClassNotFoundException, SQLException {
-//        /**
-//         * 1.注册（先查， 如果已存在 提示并重新要求注册 再增）
-//         * 2.登录验证（只查， 密码错误则回到验证,如果不存在用户名则重定向到注册页面）
-//         * 3.分数改动（猜对了加一分， 并且还要可以查询特定用户名的分数） 已经在数据库设置为唯一索引
-//         */
-//        //url
-//        String jdbcUrl = "jdbc:mysql://localhost:3306/fpdatabase";
-//        //user
-//        String db_user = "root";
-//        //password
-//        String db_password = "root";//"dd001127";
-//        Class.forName("com.mysql.cj.jdbc.Driver");
-//        connection = DriverManager.getConnection(jdbcUrl, db_user, db_password);
-//    }
 
     public Database() {
-        /**
-         * 1.注册（先查， 如果已存在 提示并重新要求注册 再增）
-         * 2.登录验证（只查， 密码错误则回到验证,如果不存在用户名则重定向到注册页面）
-         * 3.分数改动（猜对了加一分， 并且还要可以查询特定用户名的分数） 已经在数据库设置为唯一索引
-         */
         try {
             //url
             String jdbcUrl = "jdbc:mysql://localhost:3306/fpdatabase";

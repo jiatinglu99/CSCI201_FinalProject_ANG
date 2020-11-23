@@ -1,17 +1,5 @@
 /*
- Navicat Premium Data Transfer
-
- Source Server         : Connection1
- Source Server Type    : MySQL
- Source Server Version : 80020
- Source Host           : localhost:3308
- Source Schema         : fpdatabase
-
- Target Server Type    : MySQL
- Target Server Version : 80020
- File Encoding         : 65001
-
- Date: 22/11/2020 03:38:05
+    By Yunhan Mao using Navicat Premium
 */
 
 SET NAMES utf8mb4;

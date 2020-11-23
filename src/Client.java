@@ -1,9 +1,7 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Properties;
 
 public class Client {
     public ClientThread t;
@@ -23,12 +21,16 @@ public class Client {
     }
 
     public Boolean isConnected(){
-        if (t == null) return false;
+        if (t == null) {
+            return false;
+        }
         return t.getIsConnected();
     }
     
     public Boolean isLoggedin(){
-        if (t == null) return false;
+        if (t == null) {
+            return false;
+        }
         return t.getIsLoggedIn();
     }
     
@@ -59,8 +61,9 @@ public class Client {
     }
 
     public void guess(String num){
-        if (num.equals("")||num == "")
+        if (num.equals("")||num == "") {
             num = "NUL";
+        }
         t.guess(num);
     }
 
@@ -206,8 +209,9 @@ class ClientThread extends Thread{
 
     // Manual request
     String getRequestLobby(){
-        if (currentLobby == null) return "";
-        else{
+        if (currentLobby == null) {
+            return "";
+        } else{
             String temp = currentLobby;
             currentLobby = null;
             return temp;
@@ -217,20 +221,24 @@ class ClientThread extends Thread{
     // Automatic update
     String getRequestRoom(){
         hasNewMembers = false;
-        if (currentRoom == null) return "";
-        else{
+        if (currentRoom == null) {
+            return "";
+        } else{
             String temp = currentRoom;
             //currentRoom = null;
             return temp;
         }
     }
 
+    @Override
     public void run(){
         // Connect to host
         try{
             while (true) {
                 try {
-                    socket=new Socket("localhost",5677);
+                    Properties pps=new Properties();
+                    pps.load(new FileInputStream("client.properties"));
+                    socket=new Socket(pps.getProperty("address"), Integer.parseInt(pps.getProperty("clientPort")));
                     br=new BufferedReader(new InputStreamReader(socket.getInputStream()));
                     pw=new PrintWriter(socket.getOutputStream(),true);
                     break;
