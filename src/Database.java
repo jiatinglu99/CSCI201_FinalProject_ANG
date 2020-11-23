@@ -1,4 +1,6 @@
+import java.io.FileInputStream;
 import java.sql.*;
+import java.util.Properties;
 
 /**
  * @author Yunhan Mao at 2020/11/20
@@ -9,18 +11,12 @@ public class Database {
 
     public Database() {
         try {
-            //url
-            String jdbcUrl = "jdbc:mysql://localhost:3306/fpdatabase";
-            //user
-            String db_user = "root";
-            //password
-            String db_password = "root";
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection(jdbcUrl, db_user, db_password);
-        } catch (ClassNotFoundException c){
+            Properties properties = new Properties();
+            properties.load(new FileInputStream("jdbc.properties"));
+            Class.forName(properties.getProperty("classURL"));
+            connection = DriverManager.getConnection((String) properties.get("jdbcURL"), properties.getProperty("username"), properties.getProperty("password"));
+        } catch (Exception c){
             c.printStackTrace();
-        } catch (SQLException s){
-            s.printStackTrace();
         }
     }
 
@@ -82,7 +78,7 @@ public class Database {
         }
         return false;
     }
-    
+
     public String lookUpScore(String us){
         String sql4="select score from register where username=?";
         try{
