@@ -59,7 +59,9 @@ public class GamePage extends TWindow {
                 public void DO(){
                     if (waitForGuess)
                         // ask for a number and send whatever it it;
+                    {
                         client.t.guess(guessField.getText());
+                    }
                         waitForGuess = false;
                         timeToGuessBoard.setText("");
                         guessField.setText("");
