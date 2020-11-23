@@ -44,6 +44,7 @@ public class Client {
         return t.getUsername();
     }
 
+
     public Boolean isGuest(){
         return t.isGuest();
     }
