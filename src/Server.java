@@ -218,7 +218,7 @@ class ServerThread extends Thread{
                         database.addScore(username, roomMembers.size());
                         roomMembers.forEach(s->s.broadcast("Someone!"+Integer.toString(guess)+"!CORRECT!"+username+"!"+
                                                                     Integer.toString(roomMembers.size())));
-                        roomMembers.forEach(s->s.exitRoom(roomName));
+                        //roomMembers.forEach(s->s.exitRoom(roomName));
                         continue;
                     }
 
