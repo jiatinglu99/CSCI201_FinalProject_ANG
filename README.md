@@ -1,4 +1,4 @@
-# CS270-Final-Project
+# CS201 Final Project: Advanced Number Guessing (ANG)
 
 ## Deployment Guide
 1. Unzip the project and put it somewhere on the disk. 
