@@ -15,5 +15,6 @@
 
 7. After the necessary configurations, start running the program with the following steps:
 
-  -On server, run the main() in Server.java to create a server.
-  -On client machine(s), run main() in GUI.java to start actual playing.
+   -On server, run the main() in Server.java to create a server.
+   
+   -On client machine(s), run main() in GUI.java to start actual playing.
