@@ -11,6 +11,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Yunhan Mao at 2020/11/23
  * @using IntelliJ IDEA
  * A few test cases for sql database
+ *
+ * Running the test:
+ * Option 1: run generalTest(), which tests functionalities of register,
+ * add score, log in, and look up score.
+ *
+ * Option 2: run these tests separately.
+ * Before all other tests are run, testRegister should be run first, to
+ * create an entry. Then other tests could be run in any order
  */
 public class DBtest {
     private static Connection connection;
@@ -118,7 +126,7 @@ public class DBtest {
     }
 
     @Test
-    public void testLoopUpScore() {
+    public void testLookUpScore() {
         String lookUp = lookUpScore(username);
         assertNotNull(lookUp);
     }
