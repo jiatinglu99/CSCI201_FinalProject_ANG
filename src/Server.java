@@ -11,10 +11,11 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.*;
 
 public class Server {
+    static ServerSocket ss;
 
     public static void main(String[] args) {
         try {
-            ServerSocket ss = new ServerSocket(5677);
+            ss = new ServerSocket(5677);
             Map<String, AbstractMap.SimpleEntry<Integer,List<ServerThread>>> roomList=new HashMap<String, AbstractMap.SimpleEntry<Integer,List<ServerThread>>>();
             List<ServerThread> threads = new ArrayList<ServerThread>();
             ServerThread.roomList = roomList;
@@ -27,6 +28,10 @@ public class Server {
             }
         } catch (IOException ignored){
             System.out.println(ignored.getMessage());
+            try{
+                ss.close();
+            }
+            catch(Exception e){}
         }
     }
 }
@@ -41,6 +46,9 @@ class ServerThread extends Thread{
     Integer roomGoal;
     List<ServerThread> roomMembers;
     Database database;
+    int low = 0;
+    int high = 1000;
+    String score = "0";
 
     ServerThread(Socket s) throws IOException {
         pw = new PrintWriter(s.getOutputStream(),true);
@@ -55,6 +63,8 @@ class ServerThread extends Thread{
         roomMembers = new ArrayList<ServerThread>();
         roomMembers.add(this);
         roomList.put(roomName, new AbstractMap.SimpleEntry<>(roomGoal, roomMembers));
+        this.sendPlayerListUpdate(rn);
+        requestGuess();
         return true;
     }
 
@@ -65,7 +75,10 @@ class ServerThread extends Thread{
         roomGoal = room.getKey();
         roomMembers = room.getValue();
         roomMembers.add(this);
-        roomList.put(roomName, new AbstractMap.SimpleEntry<>(roomGoal, roomMembers));
+        //roomList.put(roomName, new AbstractMap.SimpleEntry<>(roomGoal, roomMembers));
+        for (ServerThread t:roomMembers) {
+            t.sendPlayerListUpdate(rn);
+        }
         return true;
     }
 
@@ -74,12 +87,13 @@ class ServerThread extends Thread{
         if (room == null) return false;
         roomMembers.remove(this);
         if (roomMembers.size() == 0){
-            // TODO if the room is empty, delete room
-            
+            roomList.remove(rn);
         }
         roomName = null;
         roomGoal = null;
         roomMembers = null;
+        high = 1000;
+        low = 0;
         return true;
     }
 
@@ -91,6 +105,16 @@ class ServerThread extends Thread{
     String extractPassword(String data){
         String[] arr = data.split("!");
         return arr[2];
+    }
+
+    void sendPlayerListUpdate(String rn){
+        StringBuilder str = new StringBuilder();
+        str.append("UpdateRoom!");
+        for (ServerThread sThread : roomList.get(rn).getValue()){
+            str.append(sThread.username+"?"+sThread.score+"!");
+        }
+        System.out.println("    "+str.toString());
+        pw.println(str.toString());
     }
 
     public void run(){
@@ -107,7 +131,8 @@ class ServerThread extends Thread{
                     if(!database.login(username,password)){
                         pw.println("BadLogin!");
                     } else {
-                        pw.println("GoodLogin");
+                        score = database.lookUpScore(username);
+                        pw.println("GoodLogin!"+score);
                     }
                 }
                 else if (line.contains("TryRegister!")){
@@ -116,7 +141,7 @@ class ServerThread extends Thread{
                     if(!database.register(username,password)){
                         pw.println("BadRegister!");
                     } else {
-                        pw.println("GoodRegister");
+                        pw.println("GoodRegister!");
                     }
                 }
                 else if (line.contains("Guest!")){
@@ -150,6 +175,25 @@ class ServerThread extends Thread{
                         pw.println("BadExit"+rn);
                     }
                 }
+                else if (line.contains("RequestLobby!")){
+                    StringBuilder str = new StringBuilder();
+                    str.append("UpdateLobby!");
+                    for (String rm : roomList.keySet()){
+                        str.append(rm+"?"+Integer.toString(roomList.get(rm).getValue().size())+"!");
+                    }
+                    System.out.println("    "+str.toString());
+                    pw.println(str.toString());
+                }
+                else if (line.contains("RequestRoom!")){
+                    StringBuilder str = new StringBuilder();
+                    String rn = extract(line);
+                    str.append("UpdateRoom!");
+                    for (ServerThread sThread : roomList.get(rn).getValue()){
+                        str.append(sThread.username+"?"+sThread.score+"!");
+                    }
+                    System.out.println("    "+str.toString());
+                    pw.println(str.toString());
+                }
                 else if (line.contains("Guess!")){
                     Integer guess;
                     try{
@@ -157,6 +201,8 @@ class ServerThread extends Thread{
                     }
                     catch(NumberFormatException nfe){
                         roomMembers.forEach(s->s.broadcast("Someone!"+extract(line)+"!INVALID!"+username));
+                        // Ask next person in the room
+                        nextPlayer().requestGuess();
                         continue;
                     }
                     if (guess>roomGoal){
@@ -165,9 +211,15 @@ class ServerThread extends Thread{
                     else if (guess<roomGoal){
                         roomMembers.forEach(s->s.broadcast("Someone!"+Integer.toString(guess)+"!TOOSMALL!"+username));
                     } else{
-                        // TODO Add Score
-                        roomMembers.forEach(s->s.broadcast("Someone!"+Integer.toString(guess)+"!EQUAL!"+username));
+                        database.addScore(username, roomMembers.size());
+                        roomMembers.forEach(s->s.broadcast("Someone!"+Integer.toString(guess)+"!CORRECT!"+username+"!"+
+                                                                    Integer.toString(roomMembers.size())));
+                        roomMembers.forEach(s->s.exitRoom(roomName));
+                        continue;
                     }
+
+                    // Ask next person in the room
+                    nextPlayer().requestGuess();
                 }
             } catch (SocketException se){
                 break;
@@ -178,8 +230,20 @@ class ServerThread extends Thread{
         }
     }
 
+    public void requestGuess(){
+        String temp = "YourTurn!";
+        broadcast(temp);
+    }
+
+    public ServerThread nextPlayer(){
+        int total = roomMembers.size();
+        int curr = roomMembers.indexOf(this);
+        return roomMembers.get((curr+1)%total);
+    }
+
     public void broadcast(String message){
         System.out.println(message);
         pw.println(message);
     }
 }
+

@@ -30,11 +30,11 @@ public class Database {
          */
         try {
             //url
-            String jdbcUrl = "jdbc:mysql://localhost:3308/fpdatabase";
+            String jdbcUrl = "jdbc:mysql://localhost:3306/fpdatabase";
             //user
             String db_user = "root";
             //password
-            String db_password = "dd001127";//"dd001127";
+            String db_password = "root";//"dd001127";
             Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection(jdbcUrl, db_user, db_password);
         } catch (ClassNotFoundException c){

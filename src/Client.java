@@ -6,7 +6,7 @@ import java.net.Socket;
 import java.net.SocketException;
 
 public class Client {
-    private ClientThread t;
+    public ClientThread t;
     public Client(){
     }
     
@@ -58,8 +58,14 @@ public class Client {
         t.exitRoom(rn);
     }
 
-    public void guess(int num){
+    public void guess(String num){
+        if (num.equals("")||num == "")
+            num = "NUL";
         t.guess(num);
+    }
+
+    public Boolean isInRoom(){
+        return t.isInRoom;
     }
 }
 
@@ -67,13 +73,19 @@ class ClientThread extends Thread{
     Boolean isConnected = false;
     Boolean isLoggedIn = false;
     Boolean isGuest = false;
+    Boolean isInRoom = false;
     Socket socket;
     BufferedReader br;
     PrintWriter pw;
     String username;
     String password;
     String currentLobby;
-    String currentRoom;
+    String currentRoom = new String();
+    String currentRoomName;
+    String currentMessage;
+    Boolean hasNewMembers = false;
+    Boolean hasNewMessage = false;
+    Boolean timeToGuess = false;
     
     ClientThread(){
     }
@@ -100,6 +112,7 @@ class ClientThread extends Thread{
         try
         {
             sleep(500);
+            isLoggedIn = true;
         }
         catch(InterruptedException ex)
         {
@@ -139,15 +152,17 @@ class ClientThread extends Thread{
     }
 
     public void joinRoom(String rn){
-        pw.println("join!"+rn);
+        pw.println("Join!"+rn);
     }
 
     public void exitRoom(String rn){
+        currentRoom = "";
         pw.println("Exit!"+rn);
     }
 
-    public void guess(int num){
-        pw.println("Guess!"+Integer.toString(num));
+    public void guess(String num){
+        timeToGuess = false;
+        pw.println("Guess!"+num);
     }
 
     public Boolean getIsConnected(){
@@ -166,10 +181,6 @@ class ClientThread extends Thread{
         return isGuest;
     }
 
-    private Boolean isForMe(String s){
-        return s.contains(username+"!");
-    }
-
     String extract(String data){
         String[] arr = data.split("!");
         return arr[1];
@@ -180,62 +191,133 @@ class ClientThread extends Thread{
         return arr[2];
     }
 
+    String extract(String data, int num){
+        String[] arr = data.split("!");
+        return arr[num];
+    }
+
+    void requestLobby(){
+        pw.println("RequestLobby!");
+    }
+
+    void requestRoom(){
+        pw.println("RequestRoom!"+currentRoomName);
+    }
+
+    // Manual request
+    String getRequestLobby(){
+        if (currentLobby == null) return "";
+        else{
+            String temp = currentLobby;
+            currentLobby = null;
+            return temp;
+        }
+    }
+
+    // Automatic update
+    String getRequestRoom(){
+        hasNewMembers = false;
+        if (currentRoom == null) return "";
+        else{
+            String temp = currentRoom;
+            //currentRoom = null;
+            return temp;
+        }
+    }
+
     public void run(){
         // Connect to host
-        while (true) {
-            try {
-                socket=new Socket("localhost",5677);
-                br=new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                pw=new PrintWriter(socket.getOutputStream(),true);
-                break;
+        try{
+            while (true) {
+                try {
+                    socket=new Socket("localhost",5677);
+                    br=new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    pw=new PrintWriter(socket.getOutputStream(),true);
+                    break;
+                }
+                catch(IOException e){
+                    System.out.println(e.getMessage());
+                }
             }
-            catch(IOException e){
-                System.out.println(e.getMessage());
+            
+            // Host is connected, now login/register
+            while (true) {
+                try{
+                    String line = br.readLine();
+                    System.out.println(line);
+                    if (isConnected == false && line.contains("Connected!")){
+                        isConnected = true;
+                    }
+                    if (isLoggedIn == false){
+                        if (line.contains("GoodRegister!")){
+                            isLoggedIn = true;
+                            isGuest = false;
+                        }
+                        if (line.contains("GoodLogin!")){
+                            isLoggedIn = true;
+                            isGuest = false;
+                        }
+                        if (line.contains("GoodGuest!")){
+                            isLoggedIn = true;
+                            isGuest = true;
+                        }
+                    }
+                    if (isLoggedIn){
+                        if (line.contains("GoodJoin!")){
+                            currentRoomName = extract(line);
+                            isInRoom = true;
+                        }
+                        else if (line.contains("GoodExit!")){
+                            isInRoom = false;
+                        }
+                        else if (line.contains("UpdateLobby!")){
+                            currentLobby = line;
+                        }
+                        else if (line.contains("UpdateRoom!")){
+                            if (!currentRoom.equals(line)){
+                                // System.out.println("1"+currentRoom);
+                                // System.out.println("2"+line);
+                                hasNewMembers = true;
+                                currentRoom = line;
+                            }
+                        }
+                        else if (line.contains("Someone!")){
+                            // means that someone guessed
+                            String guess = extract(line,1);
+                            String state = extract(line,2);//INVALID,TOOBIG,TOOSMALL,CORRECT
+                            String who =  extract(line,3);
+                            hasNewMessage = true;
+                            if (state.contains("CORRECT")){
+                                String points = extract(line,4);
+                                currentMessage = who+ " guessed "+guess+" and it's " +state +"!+"+points+" points";
+                            }
+                            else{
+                                currentMessage = who+ " guessed "+guess+" and it's " +state +"!";
+                            }
+                        }
+                        else if (line.contains("YourTurn!")){
+                            timeToGuess = true;
+                        }
+                    }
+                } catch (SocketException se){
+                    System.out.println("Connection error. Enter any key to exit.");
+                    return;
+                }catch(IOException e){
+                    e.printStackTrace();
+                }
             }
         }
-        
-        // Host is connected, now login/register
-        while (true) {
+        catch(Exception e){
             try{
-                String line = br.readLine();
-                System.out.println(line);
-                if (isConnected == false && line.contains("Connected!")){
-                    isConnected = true;
-                }
-                if (isLoggedIn == false){
-                    if (line.contains("GoodRegister!")){
-                        isLoggedIn = true;
-                        isGuest = false;
-                    }
-                    if (line.contains("GoodLogin!")){
-                        isLoggedIn = true;
-                        isGuest = false;
-                    }
-                    if (line.contains("GoodGuest!")){
-                        isLoggedIn = true;
-                        isGuest = true;
-                    }
-                }
-                if (isLoggedIn){
-                    if (line.contains("GoodJoin!")){
-                        String roomName = extract(line);
-                        // TODO
-                    }
-                    else if (line.contains("GoodExit!")){
-                        // TODO
-                    }
-                    else if (line.contains("Someone!")){
-                        // means that someone guessed
-                        // TODO
-                    }
-                }
-            } catch (SocketException se){
-                System.out.println("Connection error. Enter any key to exit.");
-                return;
-            }catch(IOException e){
-                e.printStackTrace();
+                exitRoom(currentRoomName);
+                socket.close();
             }
+            catch(Exception ee){}
         }
+    }
+    
+    public static void main(String [] args){
+        new GUI();
     }
 }
 

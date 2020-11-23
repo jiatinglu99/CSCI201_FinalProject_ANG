@@ -1,7 +1,7 @@
 import jexer.TApplication;
 
 public class GUI{
-    public static void main(String [] args){
+    public GUI(){
         try {
             TApplication.BackendType backendType = TApplication.BackendType.SWING;
             Application app = new Application(backendType);
@@ -9,5 +9,8 @@ public class GUI{
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    public static void main(String [] args){
+        new GUI();
     }
 }

@@ -1,19 +1,12 @@
-import java.io.File;
-import java.io.IOException;
-import java.text.MessageFormat;
 import java.util.ResourceBundle;
 
 import jexer.TAction;
 import jexer.TApplication;
-import jexer.TEditColorThemeWindow;
-import jexer.TEditorWindow;
 import jexer.TLabel;
 import jexer.TProgressBar;
-import jexer.TTableWindow;
 import jexer.TTimer;
 import jexer.TWidget;
 import jexer.TWindow;
-import jexer.event.TCommandEvent;
 import jexer.layout.StretchLayoutManager;
 import static jexer.TCommand.*;
 import static jexer.TKeypress.*;
@@ -103,10 +96,21 @@ public class MainWindow extends TWindow {
                             if (in2.getResult() != TMessageBox.Result.CANCEL){
                                 client.login(username, password);
                                 
+                                try{
+                                    Thread.sleep(100);
+                                }
+                                catch(Exception e){
+                                }
                                 // result from login
                                 if (client.isLoggedin()){
                                     // lobby page
                                     new LobbyWindow(getApplication(), client);
+                                }
+                                else{
+                                    getApplication().messageBox(
+                                        "Bad Login",
+                                        "The combination of username and passcode does not exist. Try Again!",
+                                        TMessageBox.Type.OK);
                                 }
                             }
                         }
@@ -137,10 +141,21 @@ public class MainWindow extends TWindow {
                             if (in2.getResult() != TMessageBox.Result.CANCEL){
                                 client.register(username, password);
                                 
+                                try{
+                                    Thread.sleep(100);
+                                }
+                                catch(Exception e){
+                                }
                                 // result from login
                                 if (client.isLoggedin()){
                                     // lobby page
                                     new LobbyWindow(getApplication(), client);
+                                }
+                                else{
+                                    getApplication().messageBox(
+                                        "Bad Registration",
+                                        "User already exists. Try another one.",
+                                        TMessageBox.Type.OK);
                                 }
                             }
                         }
@@ -155,7 +170,7 @@ public class MainWindow extends TWindow {
                 public void DO() {
                     if (client.isConnected()){
                         // Generate random username
-                        username = "USER" + Integer.toString(ThreadLocalRandom.current().nextInt(10000));
+                        username = "GUEST" + Integer.toString(ThreadLocalRandom.current().nextInt(10000));
                         client.guest(username);
                         // result from login
                         if (client.isLoggedin()){
@@ -172,7 +187,30 @@ public class MainWindow extends TWindow {
             new TAction() {
                 public void DO() {
                     getApplication().messageBox("Help",
-                        "Need to enter how to play this game here",
+                        "User Login/Registration\n"+
+                        "  *Click Register\n"+
+                        "  *Enter your username\n"+
+                        "  *Enter your password\n"+
+                        "  *Click login/register\n"+
+                       
+                        "Guests Login\n"+
+                        "  *Click Guest\n"+
+                        "  *You will be provided a random username\n"+
+                       
+                        "Rule\n"+
+                        "1.Guess a number between 0 to 1000. \n"+
+                        "2.You may guess the number all by yourself or\n"+
+                        "   take turns with others in the same room.\n"+
+                        "3.You may join or create a room in the lobby.\n"+
+                        "   Ask your friends to join and play!\n"+
+                        "3.The computer will tell you how the number\n"+
+                        "   compares to the secret passcode.\n"+
+                        "4.Then the next user take turns to guess.\n"+
+                        "5.The winner(who guessed it right) will receive\n"+
+                        "   as many points as there are players in the room!\n"+
+                        "   You earned it.\n"+
+                        "6.Players then return to the lobby and decide if\n"+
+                        "   they want to start a new round.\n",
                         TMessageBox.Type.OK);
                 }
             }
@@ -222,51 +260,4 @@ public class MainWindow extends TWindow {
         statusBar.addShortcutKeypress(kbF10, cmExit,
             i18n.getString("statusBarExit"));
     }
-
-    // ------------------------------------------------------------------------
-    // TWindow ----------------------------------------------------------------
-    // ------------------------------------------------------------------------
-
-    /**
-     * We need to override onClose so that the timer will no longer be called
-     * after we close the window.  TTimers currently are completely unaware
-     * of the rest of the UI classes.
-     */
-    @Override
-    public void onClose() {
-        getApplication().removeTimer(timer1);
-    }
-
-    /**
-     * Method that subclasses can override to handle posted command events.
-     *
-     * @param command command event
-     */
-    @Override
-    public void onCommand(final TCommandEvent command) {
-        if (command.equals(cmOpen)) {
-            try {
-                String filename = fileOpenBox(".");
-                if (filename != null) {
-                    try {
-                        new TEditorWindow(getApplication(),
-                            new File(filename));
-                    } catch (IOException e) {
-                        messageBox(i18n.getString("errorTitle"),
-                            MessageFormat.format(i18n.
-                                getString("errorReadingFile"), e.getMessage()));
-                    }
-                }
-            } catch (IOException e) {
-                        messageBox(i18n.getString("errorTitle"),
-                            MessageFormat.format(i18n.
-                                getString("errorOpeningFile"), e.getMessage()));
-            }
-            return;
-        }
-
-        // Didn't handle it, let children get it instead
-        super.onCommand(command);
-    }
-
 }

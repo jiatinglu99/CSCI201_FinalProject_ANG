@@ -1,25 +1,15 @@
-import java.io.File;
-import java.io.IOException;
-import java.text.MessageFormat;
 import java.util.ResourceBundle;
 
 import jexer.TAction;
 import jexer.TApplication;
-import jexer.TEditColorThemeWindow;
-import jexer.TEditorWindow;
-import jexer.TLabel;
-import jexer.TProgressBar;
 import jexer.TRadioGroup;
-import jexer.TTableWindow;
-import jexer.TTimer;
-import jexer.TWidget;
 import jexer.TWindow;
-import jexer.event.TCommandEvent;
 import jexer.layout.StretchLayoutManager;
 import static jexer.TCommand.*;
 import static jexer.TKeypress.*;
 import jexer.demos.*;
-import jexer.TRadioButton;
+import java.lang.Thread;
+import java.util.*;
 
 /**
  * This is the main "demo" application window.  It makes use of the TTimer,
@@ -28,15 +18,20 @@ import jexer.TRadioButton;
 public class LobbyWindow extends TWindow {
     private static final ResourceBundle i18n = ResourceBundle.getBundle(DemoMainWindow.class.getName());
     TRadioGroup group;
+    List<String> lobbyList = new ArrayList<String>();
+    List<String> lobbyNum = new ArrayList<String>();
+    Client client;
     
     public LobbyWindow(final TApplication parent, Client client) {
         this(parent, CENTERED | RESIZABLE, client);
     }
 
-    private LobbyWindow(final TApplication parent, final int flags, final Client client) {
-        super(parent, "Lobby", 0, 0, 40, 16, flags);
+    private LobbyWindow(final TApplication parent, final int flags, final Client c) {
+        super(parent, "Lobby", 0, 0, 40, 20, flags);
         setLayoutManager(new StretchLayoutManager(getWidth() - 2,
                 getHeight() - 2));
+
+        client = c;
 
         statusBar = newStatusBar(i18n.getString("statusBar"));
         statusBar.addShortcutKeypress(kbF1, cmHelp,
@@ -52,74 +47,108 @@ public class LobbyWindow extends TWindow {
 
         // Add some widgets
         addLabel("What's up! "+client.getName()+",", 1, row);
-        if (client.isGuest())
+        //if (client.isGuest())
+        row+=2;
+        addLabel("Join or Create a room.", 1, row);
         row+=2;
         group = addRadioGroup(1, row, "List of Rooms:");
+        
         // update rooms;
-        refreshRoom(group);
+        refreshRoom(client, group);
 
-        addButton("Refresh", 1, 14, 
+        addButton("Refresh", 2, 16, 
             new TAction(){
                 public void DO(){
-                    group = addRadioGroup(1, 3, "List of Rooms:");
-                    refreshRoom(group);
+                    group = addRadioGroup(1, 5, "List of Rooms:");
+                    refreshRoom(client, group);
                 }
             }
         );
 
-        addButton("Enter Room", 8, 14, 
+        addButton("Join", 13, 16, 
             new TAction(){
                 public void DO(){
-                    
+                    int selection = group.getSelected();
+                    if (selection == 0){
+                        // do nothing
+                    }
+                    else{
+                        String roomName = lobbyList.get(selection-1);
+                        client.joinRoom(roomName);
+                        try{
+                            Thread.sleep(500);
+                        }
+                        catch(Exception e){
+                        }
+                        if (client.isInRoom()){
+                            new GamePage(getApplication(), client, roomName);
+                        }
+                    }
                 }
             }
         );
 
-        addButton("Create Room", 17, 14, 
+        addButton("Create Room", 21, 16, 
             new TAction(){
                 public void DO(){
-                    group = addRadioGroup(1, 3, "List of Rooms:");
-                    refreshRoom(group);
+                    String roomName = client.getName()+"-Room";
+                    client.createRoom(roomName);
+                    // join as well
+                    try{
+                        Thread.sleep(500);
+                    }
+                    catch(Exception e){
+                    }
+                    group = addRadioGroup(1, 5, "List of Rooms:");
+                    refreshRoom(client, group);
+                    if (client.isInRoom()){
+                        new GamePage(getApplication(), client, roomName);
+                    }
                 }
             }
         );
         
     }
 
-    public void refreshRoom(TRadioGroup group){
-
-    }
-
-    /**
-     * Method that subclasses can override to handle posted command events.
-     *
-     * @param command command event
-     */
-    @Override
-    public void onCommand(final TCommandEvent command) {
-        if (command.equals(cmOpen)) {
-            try {
-                String filename = fileOpenBox(".");
-                if (filename != null) {
-                    try {
-                        new TEditorWindow(getApplication(),
-                            new File(filename));
-                    } catch (IOException e) {
-                        messageBox(i18n.getString("errorTitle"),
-                            MessageFormat.format(i18n.
-                                getString("errorReadingFile"), e.getMessage()));
+    public void refreshRoom(Client client, TRadioGroup group){
+        client.t.requestLobby();
+        try{
+            Thread.sleep(200);
+        }
+        catch(Exception e){
+        }
+        String update = client.t.getRequestLobby();
+        System.out.println("    Received: "+update);
+        if (update == null || update == ""){
+            // do nothing
+        }
+        else{
+            if (update.contains("UpdateLobby!")){ 
+                    lobbyList = new ArrayList<String>();
+                    lobbyNum = new ArrayList<String>();
+                // parse lobby list
+                for (String sRoom:update.split("!")){
+                    if (sRoom.contains("-Room")){
+                        String[] pair = sRoom.split("\\?");
+                        lobbyList.add(pair[0]);
+                        lobbyNum.add(pair[1]);
                     }
                 }
-            } catch (IOException e) {
-                        messageBox(i18n.getString("errorTitle"),
-                            MessageFormat.format(i18n.
-                                getString("errorOpeningFile"), e.getMessage()));
-            }
-            return;
-        }
 
-        // Didn't handle it, let children get it instead
-        super.onCommand(command);
+                // add radio group
+                for (int i = 0; i < lobbyList.size();i++){
+                    String title = lobbyList.get(i)+" Now "+lobbyNum.get(i)+" people";
+                    group.addRadioButton(title);
+                    System.out.println(title);
+                }
+            }
+        }
     }
 
+
+    @Override
+    public void onClose() {
+        // exit room when closed
+        client.exitRoom(client.t.currentRoomName);
+    }
 }
