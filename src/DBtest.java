@@ -19,6 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * Option 2: run these tests separately.
  * Before all other tests are run, testRegister should be run first, to
  * create an entry. Then other tests could be run in any order
+ *
+ * Note: tests are meant to be run once with the preset value.
+ * Or else it will fail because the entries become duplicate.
  */
 public class DBtest {
     private static Connection connection;
