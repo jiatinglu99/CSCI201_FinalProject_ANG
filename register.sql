@@ -18,9 +18,5 @@ CREATE TABLE `register`  (
   UNIQUE INDEX `username`(`username`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
--- ----------------------------
--- Records of register
--- ----------------------------
-INSERT INTO `register` VALUES (1, 'xiaomaogary', 'dd001127', 1);
 
 SET FOREIGN_KEY_CHECKS = 1;
