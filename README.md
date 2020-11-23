@@ -13,7 +13,7 @@
 
 6. For server, change the server.properties to change the port used by the application (default is 5677). For client, change the client.properties to change the desired address and port (default is localhost::5677). 
 
-7. After the necessary configurations, start running the program with the following steps
+7. After the necessary configurations, start running the program with the following steps:
 
-  8. On server, run the main() in Server.java to create a server.
-  9. On client machine(s), run main() in GUI.java to start actual playing.
+  -On server, run the main() in Server.java to create a server.
+  -On client machine(s), run main() in GUI.java to start actual playing.
