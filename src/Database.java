@@ -14,7 +14,7 @@ public class Database {
             //user
             String db_user = "root";
             //password
-            String db_password = "root";//"dd001127";
+            String db_password = "root";
             Class.forName("com.mysql.cj.jdbc.Driver");
             connection = DriverManager.getConnection(jdbcUrl, db_user, db_password);
         } catch (ClassNotFoundException c){
@@ -64,8 +64,7 @@ public class Database {
         }
         return false;
     }
-    ////////////////////////////添加分数//////////////////////////////////
-    public Boolean addScore(String us, int score){
+   public Boolean addScore(String us, int score){
         String sql3="update register SET score=score+? where username=?";
         int scoreToAdd=score;
         try{
@@ -83,7 +82,7 @@ public class Database {
         }
         return false;
     }
-////////////////////////////查询分数//////////////////////////////////
+    
     public String lookUpScore(String us){
         String sql4="select score from register where username=?";
         try{

@@ -200,6 +200,7 @@ class ServerThread extends Thread{
                 }
                 else if (line.contains("Guess!")){
                     Integer guess;
+                    System.out.println("The goal is"+roomGoal.toString());
                     try{
                         guess=Integer.parseInt(extract(line));
                     }
@@ -218,7 +219,6 @@ class ServerThread extends Thread{
                         database.addScore(username, roomMembers.size());
                         roomMembers.forEach(s->s.broadcast("Someone!"+Integer.toString(guess)+"!CORRECT!"+username+"!"+
                                                                     Integer.toString(roomMembers.size())));
-                        //roomMembers.forEach(s->s.exitRoom(roomName));
                         continue;
                     }
 
